@@ -1,0 +1,7 @@
+[package]
+name = "kero"
+version = "0.1.0"
+edition = "2024"
+description = "An educational virtual computer built step by step"
+
+[dependencies]
