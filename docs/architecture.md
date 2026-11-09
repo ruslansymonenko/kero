@@ -27,6 +27,8 @@ The arrows show planned relationships, not existing code. Initially only the Car
 
 A tiny 8-bit machine is the starting direction. `u8` describes a byte's value, but it does **not** automatically choose RAM capacity or virtual address width. Start with a small RAM and an address type simple enough for indexing. Decide and record exact sizes during Stage 1. Convert virtual addresses to host collection indices at a controlled boundary, and check validity there. Rust ownership protects the simulator's host data; the virtual machine's access rules remain our responsibility.
 
+For task 1.1, the learner's initial RAM implementation owns exactly four `u8` cells in a private array. Virtual addresses use `usize`, so valid addresses are 0 through 3; an empty RAM cannot be constructed. `Memory` checks the address before either read or write and returns a recoverable error for an invalid address. The four-cell size is the current prototype choice and can be revisited when programs need more space.
+
 ## Later boundaries
 
 - **Assembler:** handwritten translation from instruction text and labels to bytecode.
