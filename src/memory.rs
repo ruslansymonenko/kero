@@ -25,6 +25,10 @@ impl Memory {
 
         Ok(())
     }
+
+    pub fn get_len(&self) -> usize {
+        self.data.len()
+    }
 }
 
 pub fn create_memory() -> Memory {

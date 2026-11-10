@@ -2,6 +2,8 @@
 
 This is a fresh Rust learning path, not a record of Python progress. Finish and review one capability at a time. Each task below names an observable result, the module responsible, the connection to the running application, and completion evidence. Split a task into smaller implementation steps when teaching it, while preserving the complete goal. Record machine choices in `architecture.md` and actual progress in `progress.md`.
 
+Each stage ends with a small demonstration using the capabilities built in that stage. Treat it as a checkpoint, not another feature or a required new program: run the existing path, record what worked and what was surprising in `progress.md`, and decide whether to continue. Stopping after any completed stage is a valid outcome.
+
 Rust can support precise types, explicit errors, fixed-width arithmetic, and clear state ownership. Those tools deepen the model; they do not require real pointers, `unsafe`, threads, or a GUI at the start.
 
 ## Stage 1 — A handwritten bytecode program runs
@@ -58,6 +60,8 @@ Rust can support precise types, explicit errors, fixed-width arithmetic, and cle
 - **Acceptance:** A short program has the expected final state and explicit halt; malformed code yields a useful error; a step limit prevents an accidental endless run during development.
 - **Rust focus:** execution loop and error propagation. The loop is single-threaded.
 
+**Stage checkpoint:** Run the handwritten program through `cargo run`, observe its final register or RAM value, and confirm that it halts. This is the first complete virtual-computer path; guest text output can wait until the runtime needs it.
+
 ## Stage 2 — A CPU that calculates and chooses
 
 ### 2.1 Arithmetic with defined byte behavior
@@ -80,6 +84,8 @@ Rust can support precise types, explicit errors, fixed-width arithmetic, and cle
 - **Result:** A debugging view can show PC, decoded instruction, and changed state for each step of a program. `Computer` emits observations; a terminal adapter prints them.
 - **Acceptance:** Trace order matches actual execution and can be disabled for normal runs. This is host observability, not a guest instruction.
 
+**Stage checkpoint:** Run a terminating loop, such as a countdown, and use the optional trace to explain its state changes and halt.
+
 ## Stage 3 — Write assembly instead of byte values
 
 ### 3.1 Assemble a runnable instruction sequence
@@ -96,6 +102,8 @@ Rust can support precise types, explicit errors, fixed-width arithmetic, and cle
 
 - **Result:** A larger assembly demo uses named constants and readable source-line errors. Assembler owns names and diagnostics; app displays them.
 - **Acceptance:** Reuse, redefinition, unknown names, and line numbers behave predictably.
+
+**Stage checkpoint:** Assemble and run a labeled loop from source text, then compare its final state with the handwritten bytecode version.
 
 ## Stage 4 — A small programming language
 
@@ -119,10 +127,17 @@ Rust can support precise types, explicit errors, fixed-width arithmetic, and cle
 - **Result:** A source program chooses a branch and repeats work; compiler lowers control flow to existing jumps.
 - **Acceptance:** Both branch outcomes and a terminating loop work. Do not add new CPU semantics unless required by the language contract.
 
-### 4.5 Functions and indexed data
+### 4.5 Compile a function call
 
-- **Result:** Source code calls a function and accesses a small collection, reusing the CPU stack and RAM.
-- **Acceptance:** Nested calls return correctly; valid indexes work; out-of-range access has a defined guest behavior. Split this into two capabilities if either deserves its own traced example.
+- **Result:** Source code calls a small function and uses its returned value in a runnable program. The compiler maps calls onto the existing CPU stack and call instructions.
+- **Acceptance:** A call returns to the correct place; nested calls preserve their return addresses and values; invalid calls fail clearly.
+
+### 4.6 Compile indexed data access
+
+- **Result:** Source code stores and reads values in a small indexed collection backed by RAM; the compiled program exposes a value through the existing runnable path.
+- **Acceptance:** Valid first and last indexes work; out-of-range access has a defined guest behavior; collection storage does not overlap code or call state.
+
+**Stage checkpoint:** Run a small source program that combines an assignment, a loop, a function call, and indexed data. No particular example program is required.
 
 ## Stage 5 — Persistent virtual files
 
@@ -133,13 +148,20 @@ Rust can support precise types, explicit errors, fixed-width arithmetic, and cle
 
 ### 5.2 File allocation and metadata
 
-- **Result:** A `filesystem` gives bytes a virtual file identity, using `disk` blocks for contents and metadata; the app creates and reopens a file.
-- **Acceptance:** Empty and multi-block files, full disk, reopen, and non-overlapping allocation work. Define an on-disk format before depending on it.
+- **Result:** A `filesystem` gives bytes a virtual file identity, using `disk` blocks for contents and metadata; the app creates and reopens an empty or single-block file.
+- **Acceptance:** The on-disk format is documented before use; empty and single-block files survive reopen; metadata and contents occupy distinct blocks; a full disk fails clearly.
 
-### 5.3 Directories and paths
+### 5.3 Grow a file across blocks
+
+- **Result:** The filesystem allocates additional disk blocks as a file grows; the app writes, closes, reopens, and reads a multi-block file.
+- **Acceptance:** Data crosses a block boundary without loss; two files never claim the same block; allocation failure leaves existing data and metadata consistent.
+
+### 5.4 Directories and paths
 
 - **Result:** The app creates, lists, and reads named files through virtual paths. Filesystem resolves names to metadata; host paths remain internal to the disk adapter.
 - **Acceptance:** Root and one nested directory, duplicate names, and missing paths behave clearly.
+
+**Stage checkpoint:** Create a named file, close the application, reopen the virtual disk, and read the same bytes through a virtual path.
 
 ## Stage 6 — A kernel-like runtime
 
@@ -152,6 +174,7 @@ Rust can support precise types, explicit errors, fixed-width arithmetic, and cle
 
 - **Result:** A guest requests output through a narrow runtime interface; the runtime sends text to a terminal adapter. CPU executes the request instruction; guest code never calls host APIs directly.
 - **Acceptance:** A known request prints the expected text; unknown requests fail predictably; output ordering is observable. File requests can follow once the filesystem is connected.
+- **Interface decision:** Document how a guest request reaches the runtime and how the host adapter receives it. Reuse this boundary for later display and input requests if it remains suitable; choose exact device operations when those tasks begin. Memory-mapped I/O remains optional.
 
 ### 6.3 Sequential round-robin scheduling
 
@@ -162,6 +185,8 @@ Rust can support precise types, explicit errors, fixed-width arithmetic, and cle
 
 - **Result:** Each process sees its own allowed address region. Runtime or a memory-access layer translates guest addresses before RAM access.
 - **Acceptance:** Valid local addresses reach the intended cells; cross-region access fails; one process cannot corrupt another's region. Begin with base/limit addressing before considering paging.
+
+**Stage checkpoint:** Run two guest programs that emit text in alternating turns and finish. Verify that each keeps its own CPU state and allowed memory region.
 
 ## Stage 7 — Interaction and visual output
 
@@ -175,11 +200,18 @@ Rust can support precise types, explicit errors, fixed-width arithmetic, and cle
 - **Result:** Guest actions change a small pixel grid owned by a `framebuffer` module. A terminal or file-based observation can display or inspect it before any window exists.
 - **Acceptance:** Corners, interior pixel, clear, and invalid coordinates work; the pixel-to-buffer mapping is documented. Decide pixel format and resolution here, not in Stage 1.
 
-### 7.3 Window and keyboard adapters
+### 7.3 Window adapter
 
-- **Result:** A thin host window displays framebuffer pixels; keyboard events travel back through the runtime to the intended guest. The virtual display logic remains usable headlessly.
-- **Acceptance:** A demo draws a shape or text and responds to one key; tests cover virtual pixels and input delivery, while a manual check covers the actual window. Evaluate a simple current window crate at this stage.
+- **Result:** A thin host window displays pixels from the virtual framebuffer. The virtual display logic remains usable headlessly.
+- **Acceptance:** A demo draws a shape or text; virtual pixel behavior is checked without a window, and a manual check confirms that the window displays it. Evaluate a simple current window crate at this stage.
 
-### 7.4 Optional deeper directions
+### 7.4 Keyboard adapter
+
+- **Result:** A host key event reaches the intended guest through the runtime's input boundary; the guest changes the framebuffer in response.
+- **Acceptance:** One key produces the expected guest-visible event and display change; input delivery can be checked without a window, and a manual check covers the actual keyboard path.
+
+**Stage checkpoint:** Run a small interactive display demo that draws into the framebuffer and responds to one key. A full game is optional.
+
+### 7.5 Optional deeper directions
 
 Choose one after the simpler system works, and first divide it into complete capabilities: memory-mapped I/O, an interrupt/timer model, paging, pipes, richer graphics, or a small debugger. Rust makes these models comfortable to express with explicit types and ownership, but none is required for the initial machine.

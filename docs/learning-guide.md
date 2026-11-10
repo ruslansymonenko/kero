@@ -10,6 +10,8 @@ Before each new component, describe the parts already working. Use an ordinary a
 - important normal, edge, and failure behavior;
 - what the task does not include.
 
+Use simple and concrete language in learner-facing explanations. Do not rely on shorthand such as "runnable path" or "integration point" without explaining what it means in the current code. Introduce a technical term only when it helps, and immediately define it in ordinary words. Describe each next step as a specific edit or action, followed by the exact result the learner should see.
+
 Then guide only the next small step, with an exact expected observation. Follow with the next step after the learner has tried it. A task is complete when the result works, relevant checks pass, and important choices are recorded in `architecture.md` and `progress.md`.
 
 ## Rust while building a computer
@@ -27,5 +29,7 @@ Do not model virtual RAM with real pointers or `unsafe`. A virtual memory cell i
 3. Run `cargo check` for quick feedback; use a manual `cargo run` observation as soon as the feature reaches the app.
 4. Check important behavior and boundaries with focused tests. Run formatting, Clippy, tests, and the application before declaring completion.
 5. Review the result and update the journal. Keep tests in service of the feature, rather than making them standalone assignments.
+
+At a stage checkpoint, run the stage's existing demonstration and briefly record what you learned, what surprised or broke, and what you would reconsider. This is a reflection on completed capabilities, not another exercise. Stop there if the current machine already meets your learning goal; resume with the next stage when ready.
 
 When stuck, ask first for a hint, then implementation direction, pseudocode, partial code, and finally complete code for a specific part if needed. A small experiment is fine when it helps understand the current feature. The roadmap is a guide and can be adjusted as actual implementation teaches more.
