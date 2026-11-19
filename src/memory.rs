@@ -4,6 +4,10 @@ pub struct Memory {
 }
 
 impl Memory {
+    pub fn new() -> Self {
+        Self { data: [0, 0, 0, 0] }
+    }
+
     fn check_address(&self, address: usize) -> Result<(), String> {
         if address >= self.data.len() {
             Err(String::from("Wrong memory address"))
@@ -29,10 +33,4 @@ impl Memory {
     pub fn get_len(&self) -> usize {
         self.data.len()
     }
-}
-
-pub fn create_memory() -> Memory {
-    let memory: Memory = Memory { data: [0, 0, 0, 0] };
-
-    memory
 }

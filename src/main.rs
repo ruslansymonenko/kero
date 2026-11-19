@@ -1,32 +1,36 @@
+mod computer;
+mod cpu;
 mod memory;
 mod program_loader;
 
-use std::println;
-
-use memory::create_memory;
-use program_loader::load_program;
-
-use crate::memory::Memory;
+use crate::{computer::Computer, cpu::CPU, memory::Memory};
 
 fn main() {
-    let mut app_memory: Memory = create_memory();
+    let memory: Memory = Memory::new();
+    let cpu: CPU = CPU::new();
 
-    println!("Memory: {:?}", app_memory);
+    let program: &[u8] = &[1, 7];
 
-    match load_program(2, &[1, 7], &mut app_memory) {
-        Ok(()) => println!("Program loaded"),
-        Err(e) => println!("Error: {}", e),
-    }
+    let mut computer: Computer = Computer::new(memory, cpu);
 
-    println!("Memory: {:?}", app_memory);
+    computer.handle_program(1, program);
 
-    match app_memory.read(2) {
-        Ok(value) => println!("Memory value: {}", value),
-        Err(e) => println!("Error: {}", e),
-    }
+    // println!("Memory: {:?}", app_memory);
 
-    match app_memory.read(3) {
-        Ok(value) => println!("Memory value: {}", value),
-        Err(e) => println!("Error: {}", e),
-    }
+    // match load_program(2, &[1, 7], &mut app_memory) {
+    //     Ok(()) => println!("Program loaded"),
+    //     Err(e) => println!("Error: {}", e),
+    // }
+
+    // println!("Memory: {:?}", app_memory);
+
+    // match app_memory.read(2) {
+    //     Ok(value) => println!("Memory value: {}", value),
+    //     Err(e) => println!("Error: {}", e),
+    // }
+
+    // match app_memory.read(3) {
+    //     Ok(value) => println!("Memory value: {}", value),
+    //     Err(e) => println!("Error: {}", e),
+    // }
 }
